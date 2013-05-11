@@ -30,7 +30,7 @@ import org.bukkit.event.EventHandler;
 public class AvatarOfSpider extends ActiveSkill
 {
     private Heroes plugin;
-    private DisguiseCraft dCraft = (DisguiseCraft) plugin.getServer().getPluginManager().getPlugin("DisguiseCraft");
+    private DisguiseCraft dCraft;
 
     public AvatarOfSpider(Heroes plugin)
     {
@@ -56,6 +56,11 @@ public class AvatarOfSpider extends ActiveSkill
     {
         Player player = hero.getPlayer();
 
+        if (dCraft == null)
+        {
+            dCraft = (DisguiseCraft) plugin.getServer().getPluginManager().getPlugin("DisguiseCraft");
+        }
+
 
         broadcastExecuteText(hero);
         int duration = SkillConfigManager.getUseSetting(hero, this, SkillSetting.DURATION, 10000, false);
@@ -71,7 +76,10 @@ public class AvatarOfSpider extends ActiveSkill
             dCraft.disguisePlayer(player, disguise);
         }
 
+        player.setCustomName(player.getName());
+        player.setCustomNameVisible(true);
         hero.addEffect(new SpiderFormEffect(this, duration));
+
 
         return SkillResult.NORMAL;
     }
@@ -97,6 +105,7 @@ public class AvatarOfSpider extends ActiveSkill
         {
             super.removeFromHero(hero);
             dCraft.unDisguisePlayer(hero.getPlayer());
+
         }
     }
 }
