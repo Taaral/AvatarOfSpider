@@ -9,6 +9,7 @@ import com.herocraftonline.heroes.characters.effects.EffectType;
 import com.herocraftonline.heroes.characters.effects.ExpirableEffect;
 import com.herocraftonline.heroes.characters.effects.common.InvulnerabilityEffect;
 import com.herocraftonline.heroes.characters.skill.*;
+import com.herocraftonline.heroes.util.Messaging;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -45,14 +46,14 @@ public class AvatarOfSpider extends ActiveSkill
         setArgumentRange(0, 0);
         setIdentifiers(new String[] { "skill spiderform" });
         setTypes(new SkillType[] { SkillType.FORCE, SkillType.BUFF, SkillType.SILENCABLE, SkillType.COUNTER });
-
+        Bukkit.getServer().getPluginManager().registerEvents(new SkillHeroListener(this), plugin);
     }
 
     public ConfigurationSection getDefaultConfig()
     {
         ConfigurationSection node = super.getDefaultConfig();
         node.set(SkillSetting.DURATION.node(), Integer.valueOf(10000));
-        node.set("damage-bonus", Double.valueOf(1.05D));
+        node.set("damage-bonus", Double.valueOf(1.15D));
         return node;
     }
 
@@ -82,7 +83,7 @@ public class AvatarOfSpider extends ActiveSkill
         }
 
         hero.addEffect(new SpiderFormEffect(this, duration));
-        broadcast(hero.getPlayer().getLocation(), this.applyText);
+        broadcast(hero.getPlayer().getLocation(), this.applyText, new Object[] { Messaging.getLivingEntityName(hero.getPlayer()).toLowerCase() });
 
         return SkillResult.NORMAL;
     }
@@ -108,23 +109,22 @@ public class AvatarOfSpider extends ActiveSkill
         {
             super.removeFromHero(hero);
             dCraft.unDisguisePlayer(hero.getPlayer());
-            broadcast(hero.getPlayer().getLocation(), this.expireText);
-
+            broadcast(hero.getPlayer().getLocation(), this.expireText, new Object[] { Messaging.getLivingEntityName(hero.getPlayer()).toLowerCase() });
         }
     }
 
     public class SkillHeroListener
             implements Listener
+    {
+        private AvatarOfSpider top;
+        public SkillHeroListener(AvatarOfSpider top)
         {
-
-        public SkillHeroListener()
-        {
+            this.top = top;
         }
 
         @EventHandler
         public void onWeaponDamage(WeaponDamageEvent event)
         {
-
 
             if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
                 return;
@@ -134,9 +134,10 @@ public class AvatarOfSpider extends ActiveSkill
 
             if (character.hasEffect("spiderform"))
             {
-                double damageBonus = SkillConfigManager.getUseSetting(plugin.getCharacterManager().getHero(event.getEntity()), this, "damage-bonus", 1.05D, false);
+                double damageBonus = SkillConfigManager.getUseSetting(plugin.getCharacterManager().getHero((Player) event.getEntity()), top, "damage-bonus", 1.15D, false);
 
-                event.setDamage((int)(event.getDamage() * damageBonus));
+                event.setDamage((int) (event.getDamage() * damageBonus));
+
             }
         }
     }
